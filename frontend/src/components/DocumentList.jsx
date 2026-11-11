@@ -22,15 +22,15 @@ export default function DocumentList({ documents, owner, isLoading, error }) {
         </tr>
       </thead>
       <tbody>
-        {documents.map((document) => (
-          <tr key={document.id}>
-            <td>{document.originalName}</td>
-            <td>{formatSize(document.size)}</td>
-            <td>{new Date(document.uploadedAt).toLocaleString('pt-BR')}</td>
+        {documents.map((item) => (
+          <tr key={item.id}>
+            <td>{item.originalName}</td>
+            <td>{formatSize(item.size)}</td>
+            <td>{new Date(item.uploadedAt).toLocaleString('pt-BR')}</td>
             <td>
               <DownloadButton
-                documentId={document.id}
-                fileName={document.originalName}
+                documentId={item.id}
+                fileName={item.originalName}
                 owner={owner}
               />
             </td>
