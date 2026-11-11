@@ -1,20 +1,60 @@
-// Seed do componente raiz do Document Management System.
-//
-// Este é apenas um ponto de partida mínimo. Durante o Passo 3 você vai usar o
-// Agent Mode do GitHub Copilot para construir os componentes:
-//   - components/UploadComponent
-//   - components/DocumentList
-//   - components/DownloadButton
-// e o serviço services/ que consome a API do backend via fetch.
+import { useCallback, useEffect, useState } from 'react';
+import UploadComponent from './components/UploadComponent';
+import DocumentList from './components/DocumentList';
+import { listDocuments } from './services/documentApi';
 
 export default function App() {
+  const [owner, setOwner] = useState('usuario-1');
+  const [documents, setDocuments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const ownerId = owner.trim();
+
+  const loadDocuments = useCallback(async () => {
+    if (!ownerId) {
+      setDocuments([]);
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    try {
+      setDocuments(await listDocuments(ownerId));
+    } catch (loadError) {
+      setError(loadError.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [ownerId]);
+
+  useEffect(() => {
+    loadDocuments();
+  }, [loadDocuments]);
+
   return (
     <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem' }}>
       <h1>Document Management System</h1>
-      <p>
-        Seed do frontend. Construa a interface durante o Passo 3 usando o Agent
-        Mode do GitHub Copilot.
-      </p>
+
+      <label>
+        Usuário (X-User-Id):{' '}
+        <input value={owner} onChange={(event) => setOwner(event.target.value)} />
+      </label>
+
+      <section>
+        <h2>Enviar documento</h2>
+        <UploadComponent owner={ownerId} onUploaded={loadDocuments} />
+      </section>
+
+      <section>
+        <h2>Documentos</h2>
+        <DocumentList
+          documents={documents}
+          owner={ownerId}
+          isLoading={isLoading}
+          error={error}
+        />
+      </section>
     </main>
   );
 }
