@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import UploadComponent from './components/UploadComponent';
 import DocumentList from './components/DocumentList';
 import { listDocuments } from './services/documentApi';
@@ -10,21 +10,28 @@ export default function App() {
   const [error, setError] = useState('');
 
   const ownerId = owner.trim();
+  const latestRequestRef = useRef(0);
 
   const loadDocuments = useCallback(async () => {
+    const requestId = latestRequestRef.current + 1;
+    latestRequestRef.current = requestId;
+    const isLatest = () => requestId === latestRequestRef.current;
+
     if (!ownerId) {
       setDocuments([]);
+      setIsLoading(false);
       return;
     }
 
     setIsLoading(true);
     setError('');
     try {
-      setDocuments(await listDocuments(ownerId));
+      const result = await listDocuments(ownerId);
+      if (isLatest()) setDocuments(result);
     } catch (loadError) {
-      setError(loadError.message);
+      if (isLatest()) setError(loadError.message);
     } finally {
-      setIsLoading(false);
+      if (isLatest()) setIsLoading(false);
     }
   }, [ownerId]);
 

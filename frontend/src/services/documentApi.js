@@ -1,10 +1,15 @@
 const API_PREFIX = '/api';
 
 async function request(path, { owner, ...options } = {}) {
-  const response = await fetch(`${API_PREFIX}${path}`, {
-    ...options,
-    headers: { 'X-User-Id': owner, ...options.headers },
-  });
+  let response;
+  try {
+    response = await fetch(`${API_PREFIX}${path}`, {
+      ...options,
+      headers: { 'X-User-Id': owner, ...options.headers },
+    });
+  } catch {
+    throw new Error('Não foi possível conectar ao servidor.');
+  }
 
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));

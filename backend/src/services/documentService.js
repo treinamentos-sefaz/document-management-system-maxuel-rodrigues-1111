@@ -6,14 +6,14 @@ function toPublicMetadata({ id, originalName, size, uploadedAt, owner }) {
   return { id, originalName, size, uploadedAt, owner };
 }
 
-function registerUpload({ file, owner }) {
+function registerUpload({ originalName, size, storedPath, owner }) {
   const document = documentRepository.save({
     id: crypto.randomUUID(),
-    originalName: file.originalname,
-    size: file.size,
+    originalName,
+    size,
     uploadedAt: new Date().toISOString(),
     owner,
-    storagePath: file.path,
+    storagePath: storedPath,
   });
   return toPublicMetadata(document);
 }
@@ -25,12 +25,12 @@ function listDocuments(owner) {
     .map(toPublicMetadata);
 }
 
-function getDownloadableDocument(id, owner) {
+function getDownloadableFile(id, owner) {
   const document = documentRepository.findById(id);
   if (!document || document.owner !== owner) {
     throw new AppError(404, 'Documento não encontrado.');
   }
-  return document;
+  return { fileName: document.originalName, filePath: document.storagePath };
 }
 
-module.exports = { registerUpload, listDocuments, getDownloadableDocument };
+module.exports = { registerUpload, listDocuments, getDownloadableFile };

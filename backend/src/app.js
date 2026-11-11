@@ -11,35 +11,25 @@
 // usando multer com diskStorage. Não utilize provedores externos.
 
 const express = require('express');
-const multer = require('multer');
 const config = require('./config');
 const documentRoutes = require('./routes/documentRoutes');
-const { AppError } = require('./services/appError');
+const { errorHandler } = require('./controllers/errorHandler');
 
 const app = express();
 
 app.use(express.json());
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+});
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
 app.use(documentRoutes);
-
-app.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    const status = error.code === 'LIMIT_FILE_SIZE' ? 413 : 400;
-    const message = status === 413
-      ? 'Arquivo excede o tamanho máximo permitido.'
-      : 'Requisição de upload inválida.';
-    return res.status(status).json({ error: message });
-  }
-  if (error instanceof AppError) {
-    return res.status(error.status).json({ error: error.message });
-  }
-  console.error(error);
-  return res.status(500).json({ error: 'Erro interno do servidor.' });
-});
+app.use(errorHandler);
 
 if (require.main === module) {
   app.listen(config.port, () => {
